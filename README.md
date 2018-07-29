@@ -1,1 +1,2 @@
 # TinyOS-Benchmark
+test
