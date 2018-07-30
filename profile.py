@@ -2,6 +2,7 @@
 import re
 import pickle
 import os
+import statsmodels.tsa.stattools as ts
 
 def load_tasks_queque(fn, recompute = False):
     """ loading tasks log from the fn file, watching log from Cooja.
@@ -113,7 +114,11 @@ def check_adf(tasks_queue, pre_task, next_task, block=10):
             return float(e[pre_task][next_task])/ sum(e[pre_task].values())
         except:
             return None
-    return map(prob_trans, stores)
+    prob_serise = map(prob_trans, stores)
+    if None in prob_serise:
+        print "None"
+        return
+    print ts.adfuller(prob_serise)
     
     
     
@@ -136,10 +141,12 @@ if __name__ == '__main__':
             #print '-' * 60
             #tp.banner(fn)
             #tp.table([result.values()], result.keys())
-            print '\n\ndebug \n', choice_most_task(get_trans_fre_mat(data), 2)
-            # print check_adf(data, '0x0001', '0x0002')
+            print '-' * 15, fn, '-' * 15
+            hot_taskl_pair = choice_most_task(get_trans_fre_mat(data), 2)
+            print hot_taskl_pair
+            check_adf(data, hot_taskl_pair[0][0], hot_taskl_pair[0][1])
             #print tasks_sequence_split(range(12), 3)
-            
+            print '\n\n'
             
             break # Only watch 1.txt from node 1
         
