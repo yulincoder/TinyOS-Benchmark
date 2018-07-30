@@ -41,16 +41,21 @@ def occupy(ls, th=0.8):
         count_sum += ls[i]
         if float(count_sum) / total > 0.8:
             return (float(i + 1) / len(ls), float(count_sum) / total)
-'''
-def test_occupy(ls, th):
-    print occupy(ls, th)           
-test_occupy([12, 14, 0, 8], 0.8)
-'''
+
 def get_trans_fre_mat(tasks_queue):
+    all_tasks = list(set(tasks_queue))
+    store = {e1: {e2:0 for e2 in all_tasks} for e1 in all_tasks}
+
+    for i in range(len(tasks_queue)-1):
+        store[tasks_queue[i]][tasks_queue[i+1]] += 1
+    return store
+
+    
+def occupy_feature(tasks_queue):
     """ get 
     """
     all_tasks = list(set(tasks_queue))
-    store = {e1: {e2:0 for e2 in all_tasks} for e1 in all_tasks}
+    store = get_trans_fre_mat(tasks_queue)
 
     for i in range(len(tasks_queue)-1):
         store[tasks_queue[i]][tasks_queue[i+1]] += 1
@@ -77,8 +82,48 @@ def get_trans_fre_mat(tasks_queue):
     '''
     return {'task': task_proportion, 'occupy': occupy_precentage, "tasks num": len(all_tasks)}
 
+def tasks_sequence_split(tasks_sequence, n):
+    each_len = int(round(len(tasks_sequence) / float(n)))
+    return [tasks_sequence[i:i + each_len]
+            for i in range(0, len(tasks_sequence), each_len)]
+
+def choice_most_task(trans_mat, n):
+    # get n task pair, the number of trans is most
+    # fint hot pot task trans
+    temp = []
+    for e in trans_mat.values():
+        temp += e.values()
+    
+    temp = sorted(temp, reverse=True)
+    retval = []
+    for k, v in trans_mat.items():
+        for k2, v2 in v.items():
+            if v2 in temp[:n]: retval.append((k, k2, v2))
+    return retval
+    
+
+def check_adf(tasks_queue, pre_task, next_task, block=10):
+    all_tasks = list(set(tasks_queue))
+
+    splited_data = tasks_sequence_split(tasks_queue, block)
+    stores = map(lambda e: get_trans_fre_mat(e), splited_data)
+    #prob_trans = lambda e: float(e[pre_task][next_task])/ sum(e[pre_task].values())
+    def prob_trans(e):
+        try:
+            return float(e[pre_task][next_task])/ sum(e[pre_task].values())
+        except:
+            return None
+    return map(prob_trans, stores)
+    
+    
+    
+
 
 if __name__ == '__main__':
+    ''' Zhang Te:
+    Do not touch anything !!!!
+    Only I am able to understand those codes. Contact me by paradoxt@gmail.com
+    '''
     import tableprint as tp
     for e1 in os.walk('./dataset'):
         for e2 in e1[2]:
@@ -86,16 +131,18 @@ if __name__ == '__main__':
             data = load_tasks_queque(fn, recompute = False)
             if len(data) < 2: continue
             
-            result = get_trans_fre_mat(data)
-            if result == None: continue
-            print '-' * 60
-            tp.banner(fn)
-            tp.table([result.values()], result.keys())
-            '''
-            get_trans_fre_mat(data[:len(data)/2])
-            print '---------'
-            get_trans_fre_mat(data[len(data)/2:])
-            '''
+            #result = occupy_feature(data)
+            #if result == None: continue
+            #print '-' * 60
+            #tp.banner(fn)
+            #tp.table([result.values()], result.keys())
+            print '\n\ndebug \n', choice_most_task(get_trans_fre_mat(data), 2)
+            # print check_adf(data, '0x0001', '0x0002')
+            #print tasks_sequence_split(range(12), 3)
+            
+            
             break # Only watch 1.txt from node 1
+        
+        
 
 
